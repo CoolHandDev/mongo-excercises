@@ -60,3 +60,23 @@
             'full-date': '$grades.date'
         }
     })
+
+/***
+ * County how many instances of each cuisine in each borough
+ */
+db.restaurants.aggregate({
+    $group: {
+        '_id': {'cuisine': '$cuisine',
+            'borough': '$borough'
+        },
+        'count': {$sum: 1}
+    }
+})
+
+/***
+ * Distinct list of restaurants
+ */
+db.restaurants.aggregate([
+    { $group: {'_id': '$cuisine'}},
+    {$out: 'distinct_cuisines'}
+])
