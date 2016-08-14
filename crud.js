@@ -43,4 +43,88 @@ db.movies.insertMany([
 
 //Find restaurants who have a grade of 8 in the restaurants collection of the scratch database
 use scratch
-db.restaurants.find({grades: {$elemMatch: {score: 8}}}).pretty()
+db.restaurants.find(
+    {
+        grades: 
+            {
+                $elemMatch: {score: 8}
+            }
+    }).pretty()
+
+
+//add an array field
+use scratch
+db.movies.updateOne({
+    "title": "Indiana Jones"},
+    {$push: 
+        {
+            "reviews": {"rating": "4.2"}
+        }        
+    }
+)
+
+//m101js week 2
+db.movieDetails.find(
+    {
+        year: 2013, rated: "PG-13"
+        , "awards.wins": 0
+    }, 
+    {
+        title:1
+    }
+    ).pretty()
+
+//
+db.movieDetails.find(
+    {
+        genres: {
+                    $all: ["Comedy", "Crime"]
+                }
+    }).pretty()
+
+//
+db.movieDetails.find({genres: ["Comedy", "Crime"]}).count()
+
+db.tempcoll.update(
+    {},
+    {$set: {"awards": "shit"}}
+)
+
+
+db.tempcoll.update(
+    {},
+    {
+        $set: {
+                "awards": {"oscars": [
+                                        "test", "test2"                                        
+                ]}
+        }
+    }
+)
+
+
+db.tempcoll.update(
+    {},
+    {
+        $set: {
+                "awards" : {
+                "oscars" : [
+                    {"award": "bestAnimatedFeature", "result": "won"},
+                    {"award": "bestMusic", "result": "won"},
+                    {"award": "bestPicture", "result": "nominated"},
+                    {"award": "bestSoundEditing", "result": "nominated"},
+                    {"award": "bestScreenplay", "result": "nominated"}
+                ],
+                "wins" : 56,
+                "nominations" : 86,
+                "text" : "Won 2 Oscars. Another 56 wins and 86 nominations."
+            }        
+        }
+    }
+)
+
+//determine if movie has gotten an award
+db.tempcoll.find({
+    "awards.oscars.0": {$exists: true},
+    "awards.oscars.1": {$exists: true}     
+})

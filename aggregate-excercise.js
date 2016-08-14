@@ -80,3 +80,51 @@ db.restaurants.aggregate([
     { $group: {'_id': '$cuisine'}},
     {$out: 'distinct_cuisines'}
 ])
+
+/***
+ * find sepecific movie using $match
+ */
+use movie
+db.movieDetails.aggregate([
+    { 
+        $match: { _id: ObjectId("569190ca24de1e0ce2dfcd4f") } 
+    }
+]).pretty()
+
+
+/***
+ * find sepecific movie rating using $match and direct results to 
+ * new collection
+ */
+use movie
+db.movieDetails.aggregate([
+    { 
+        $match: { rated: "PG-13", year: 1968 } 
+    }
+]).pretty()
+
+/**
+ *   output results to another collection
+ */
+db.movieDetails.aggregate([
+    { 
+        $match: { rated: "PG-13", year: 1968 } 
+    },
+    {
+        $out: "tempcoll"
+    }
+]).pretty()
+
+
+//find movies that have more than 2 artists
+db.movieDetails.aggregate(
+    [
+        {$project: {
+            "_id": 1, 
+            "title": 1,
+            "artists": {$size: "$actors"}
+
+        }},
+        {$match: {"artists": {$gt:5}}}
+    ]
+)
