@@ -128,3 +128,14 @@ db.tempcoll.find({
     "awards.oscars.0": {$exists: true},
     "awards.oscars.1": {$exists: true}     
 })
+
+//Insert a million records. 
+var insertMillion = function() {
+    var start = Date();
+    for ( var i = 0; i < 1000000; i++) {
+        db.million_coll.insert({"sequence_num": i});
+        print("sequence number: " + i);
+    };
+    var end = Date();
+    print(`start date: ${start}.  end: ${end}`);
+}

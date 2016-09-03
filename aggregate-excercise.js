@@ -44,7 +44,7 @@
         }
     })
 
-
+ 
 /***
  * Date operators
  */
@@ -128,3 +128,4 @@ db.movieDetails.aggregate(
         {$match: {"artists": {$gt:5}}}
     ]
 )
+
