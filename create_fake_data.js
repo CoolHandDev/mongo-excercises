@@ -1,9 +1,9 @@
-//Create a million students
+//Create 10 million records
 db = db.getSiblingDB("school");
 db.students.drop();
 types = ['exam', 'quiz', 'homework', 'homework'];
 // 1 million students
-for (i = 0; i < 1000000; i++) {
+for (var i = 0; i < 1000000; i++) {
 
     // take 10 classes
     for (class_counter = 0; class_counter < 10; class_counter++) {
@@ -29,3 +29,15 @@ for (i = 0; i < 1000000; i++) {
     }
 
 }
+
+//create index
+db.students.createIndex({"scores.score": 1})
+
+db.students.find(
+    {
+        "scores": {
+                    "$elemMatch": {"type": "exam", "score": {"$gt": 99}}
+                }    
+    }
+    
+).count()
