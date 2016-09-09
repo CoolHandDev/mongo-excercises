@@ -129,3 +129,66 @@ db.movieDetails.aggregate(
     ]
 )
 
+//Crunchbase database.  Count how many times a person appears in relationships in companies. 
+//Note that they may appear multiple times in one company as they change titles.
+//TODO: determine how to generate result where the count is based on how many companies a 
+//person was involved in.  Only count 1 involvement from a company.
+db.companies.aggregate(
+    [
+        { $match: { "relationships.person": { $ne: null}}},
+        { $project: { relationships: 1, _id: 0}},
+        { $unwind: "$relationships"},
+        { $group: { 
+            _id: "$relationships.person",
+            count: { $sum: 1}
+        }},
+        { $sort: { count: -1 }}               
+    ]
+)
+
+    //Find out how many times a person appeared in different positions in a company    
+    db.companies.aggregate(
+        [            
+            { $project: { _id: 0, name: 1, relationships: 1}},
+            { $unwind: "$relationships"},
+            { $group: {"_id":  {
+                        "companies": "$name",
+                        "person:": "$relationships.person.permalink"
+                    },
+                    "count": { $sum: 1 }
+                }
+            },
+            { $match: { "count": { $gt: 1 }}},
+            { $sort: {"count": -1 } }
+        ]
+    )
+
+    //Examne Tim Hanlon
+    db.companies.aggregate(
+        [
+            { $match: { "relationships.person": { $ne: null}}},
+            { $project: { name: 1, relationships: 1, _id: 0}},
+            { $unwind: "$relationships"},
+            { $match: { "relationships.person.permalink": "tim-hanlon"}},
+            { $sort: { name: 1 } }
+        ]
+    )
+
+    db.companies.aggregate(
+        [
+            { $match: { "relationships.person.permalink": "tim-hanlon"}},
+            { $project: { name: 1, relationships: 1}},
+            { $group: { _id: "$name", count: { $sum: 1} }}
+        ]
+    )
+
+    //Examine Saul Klein
+    db.companies.aggregate(
+        [
+            { $match: { "relationships.person": { $ne: null}}},
+            { $project: { name: 1, relationships: 1, _id: 0}},
+            { $unwind: "$relationships"},
+            { $match: { "relationships.person.permalink": "saul-klein"}},
+            { $sort: { name: 1 } }
+        ]
+    )
