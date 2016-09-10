@@ -153,7 +153,7 @@ db.companies.aggregate(
             { $unwind: "$relationships"},
             { $group: {"_id":  {
                         "companies": "$name",
-                        "person:": "$relationships.person.permalink"
+                        "person": "$relationships.person.permalink"
                     },
                     "count": { $sum: 1 }
                 }
@@ -171,6 +171,26 @@ db.companies.aggregate(
             { $unwind: "$relationships"},
             { $match: { "relationships.person.permalink": "tim-hanlon"}},
             { $sort: { name: 1 } }
+        ]
+    )
+
+    //work towards how many distinct companies a person has worked for.
+    //Just do a group/sum as last step
+    db.companies.aggregate(
+        [            
+            { $project: { _id: 0, name: 1, relationships: 1}},
+            { $unwind: "$relationships"},
+            { $group: {"_id":  {
+                        "companies": "$name",
+                        "person": "$relationships.person.permalink"
+                    },
+                    "count": { $sum: 1 }
+                }
+            },
+            { $match: { "count": { $gt: 1 }}},
+            { $sort: {"count": -1 } },
+            { $project: { "identifier": "$_id", count: "$count", "_id": 0}},
+            { $match: { "identifier.person": "naho-ojima"}}
         ]
     )
 
