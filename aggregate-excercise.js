@@ -290,3 +290,104 @@ db.companies.aggregate(
             }            
         ]
     )
+
+//calculate smallest average amount of funding per round.    
+
+    //step 1:  companies founded in 2004 and more than 5 rounds of funding
+        db.companies.aggregate([
+            { $match: {
+                "founded_year": 2004      
+            }},
+            { $project: {
+                numberOfRounds: {$size: "$funding_rounds"},
+                "founded_year": 1,
+                "funding_rounds": 1,
+                "name": 1
+                }
+            },
+            { $match: {
+                "numberOfRounds": {$gte: 5}      
+            }},        
+        ])
+    //step 2:  unwind funding rounds
+        db.companies.aggregate([
+            { $match: {
+                "founded_year": 2004      
+            }},
+            { $project: {
+                numberOfRounds: {$size: "$funding_rounds"},
+                "founded_year": 1,
+                "funding_rounds": 1,
+                "name": 1
+                }
+            },
+            { $match: {
+                "numberOfRounds": {$gte: 5}      
+            }},
+            { $unwind: "$funding_rounds"}                  
+        ])
+    //step 3:  there could be multiple rounds of same type so average them
+        db.companies.aggregate([
+            { $match: {
+                "founded_year": 2004      
+            }},
+            { $project: {
+                numberOfRounds: {$size: "$funding_rounds"},
+                "founded_year": 1,
+                "funding_rounds": 1,
+                "name": 1
+                }
+            },
+            { $match: {
+                "numberOfRounds": {$gte: 5}      
+            }},
+            { $unwind: "$funding_rounds"},
+            {
+                $group: {
+                    "_id": {
+                        "company": "$name",
+                        "funding_round": "$funding_rounds.round_code"                        
+                    },
+                    "avgFunding": {$avg: "$funding_rounds.raised_amount"}
+                }
+            },
+            { $project: {"corp": "$_id", _id: 0, "avgFunding":1}},
+            { $sort: {"corp.company": 1, "corp.funding_round": 1}}                                
+        ])
+    //step 4.  average funding per round
+        db.companies.aggregate([
+            { $match: {
+                "founded_year": 2004      
+            }},
+            { $project: {
+                numberOfRounds: {$size: "$funding_rounds"},
+                "founded_year": 1,
+                "funding_rounds": 1,
+                "name": 1
+                }
+            },
+            { $match: {
+                "numberOfRounds": {$gte: 5}      
+            }},
+            { $unwind: "$funding_rounds"},
+            {
+                $group: {
+                    "_id": {
+                        "company": "$name",
+                        "funding_round": "$funding_rounds.round_code"                        
+                    },
+                    "avgFunding": {$avg: "$funding_rounds.raised_amount"}
+                }
+            },
+            { $project: {"corp": "$_id", _id: 0, "avgFunding":1}},
+            { $sort: {"corp.company": 1, "corp.funding_round": 1}},
+            {
+                $group: {
+                    "_id": {
+                        "corporation": "$corp.company"
+                    },
+                    "averageFundingTotal": { $avg: "$avgFunding" }
+                }
+            },
+            { $sort: {"averageFundingTotal": 1}}
+        ])
