@@ -174,41 +174,29 @@ db.companies.aggregate(
         ]
     )
 
-    //work towards how many distinct companies a person has worked for.
-    //Just do a group/sum as last step
+    //This query shows how many distinct companies a person has been 
+    //associated with.
     db.companies.aggregate(
-        [            
+        [    
+            { $match: { "relationships.person": { $ne: null}}},        
             { $project: { _id: 0, name: 1, relationships: 1}},
             { $unwind: "$relationships"},
             { $group: {"_id":  {
-                        "companies": "$name",
-                        "person": "$relationships.person.permalink"
-                    },
-                    "count": { $sum: 1 }
+                                    "companies": "$name",
+                                    "person": "$relationships.person.permalink"
+                                },
+                        "count": { $sum: 1 }
                 }
-            },
-            { $match: { "count": { $gt: 1 }}},
-            { $sort: {"count": -1 } },
+            },                        
             { $project: { "identifier": "$_id", count: "$count", "_id": 0}},
-            { $match: { "identifier.person": "naho-ojima"}}
+            { $match: { "identifier.person": "eric-di-benedetto"}},
+            { $group: {"_id": {
+                                "companies_worked_for": "$identifier.person"                                
+                              },
+                         "num": { $sum: 1}
+                      }
+            },
+            { $sort: {"companies_worked_for": 1 } },
         ]
     )
-
-    db.companies.aggregate(
-        [
-            { $match: { "relationships.person.permalink": "tim-hanlon"}},
-            { $project: { name: 1, relationships: 1}},
-            { $group: { _id: "$name", count: { $sum: 1} }}
-        ]
-    )
-
-    //Examine Saul Klein
-    db.companies.aggregate(
-        [
-            { $match: { "relationships.person": { $ne: null}}},
-            { $project: { name: 1, relationships: 1, _id: 0}},
-            { $unwind: "$relationships"},
-            { $match: { "relationships.person.permalink": "saul-klein"}},
-            { $sort: { name: 1 } }
-        ]
-    )
+    
