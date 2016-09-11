@@ -191,12 +191,102 @@ db.companies.aggregate(
             { $project: { "identifier": "$_id", count: "$count", "_id": 0}},
             { $match: { "identifier.person": "eric-di-benedetto"}},
             { $group: {"_id": {
-                                "companies_worked_for": "$identifier.person"                                
+                                "person": "$identifier.person"                                
                               },
-                         "num": { $sum: 1}
+                         "num_of_companies": { $sum: 1}
                       }
             },
-            { $sort: {"companies_worked_for": 1 } },
+            { $sort: {"person": 1 } },
         ]
     )
     
+/*
+    Find class with highest student performance
+    
+*/
+
+    //step 1: unwind the scores.
+    db.grades.aggregate(
+        [
+            { $unwind: "$scores" }
+        ]
+    )
+    
+    //step 2: only match exam and homework
+    db.grades.aggregate(
+        [
+            { $unwind: "$scores" },
+            {
+                $match: {
+                    $or: [{"scores.type": "exam"}, {"scores.type": "homework"}]
+                }
+            }
+        ]
+    ) 
+    
+    //step 3: get average of grades per student   
+    db.grades.aggregate(
+        [
+            { $unwind: "$scores" },
+            {
+                $match: {
+                    $or: [{"scores.type": "exam"}, {"scores.type": "homework"}]
+                }
+            },
+            {
+                $group: {
+                    "_id": {
+                        "student_id": "$student_id",
+                        "class_id": "$class_id"
+                    },
+                    "average_grade": {$avg: "$scores.score"}                    
+                }
+            },
+            {
+                $project: {
+                    "student_performance": "$_id",
+                    "average_grade": 1,
+                    _id: 0
+                }
+            }
+        ]
+    )
+
+    //step 4: get average per class
+    db.grades.aggregate(
+        [
+            { $unwind: "$scores" },
+            {
+                $match: {
+                    $or: [{"scores.type": "exam"}, {"scores.type": "homework"}]
+                }
+            },
+            {
+                $group: {
+                    "_id": {
+                        "student_id": "$student_id",
+                        "class_id": "$class_id"
+                    },
+                    "average_grade": {$avg: "$scores.score"}                    
+                }
+            },
+            {
+                $project: {
+                    "student_performance": "$_id",
+                    "average_grade": 1,
+                    _id: 0
+                }
+            },
+            {
+                $group: {
+                    "_id": {
+                        "class_id": "$student_performance.class_id"                        
+                    },
+                    "average_grade_for_class": {$avg: "$average_grade"}                    
+                }
+            },
+            {
+                $sort: { "average_grade_for_class": -1}
+            }            
+        ]
+    )
